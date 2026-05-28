@@ -280,7 +280,9 @@ export function scoreAssessment(
 ): AssessmentResult {
   const scoredAnswers: ScoredAnswer[] = questions.map((question) => {
     const answer = submission.answers[question.id] ?? "";
-    const contentScore = roundOne(scoreQuestion(question, answer));
+    const textEvaluation =
+      question.type === "short_text" ? submission.textEvaluations?.[question.id] : undefined;
+    const contentScore = roundOne(textEvaluation?.score ?? scoreQuestion(question, answer));
     const timingScore = scoreTime(submission.timings?.[question.id], question, answer);
     const appliedTimeScore =
       question.type === "short_text" && contentScore < 4 ? 0 : timingScore.timeScore;
@@ -300,7 +302,10 @@ export function scoreAssessment(
       timedOut: timingScore.timedOut,
       rawScore,
       weight: question.weight,
-      weightedScore: roundOne(rawScore * question.weight)
+      weightedScore: roundOne(rawScore * question.weight),
+      evaluationSource: textEvaluation?.source,
+      evaluationReason: textEvaluation?.reason,
+      evaluationModel: textEvaluation?.model
     };
   });
 
@@ -340,7 +345,7 @@ export function scoreAssessment(
   const recommendedTracks = buildRecommendedTracks(skillNumericScores, overallScore);
 
   const resultWithoutReport: Omit<AssessmentResult, "report"> = {
-    assessmentVersion: "v8",
+    assessmentVersion: "v9",
     status: "active",
     id,
     fileName,

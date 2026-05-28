@@ -4,6 +4,7 @@ import { questions } from "@/lib/questions";
 import { scoreAssessment } from "@/lib/scoring";
 import { createResultFileName } from "@/lib/slugify";
 import { getStorageProvider } from "@/lib/storage";
+import { evaluateShortTextAnswers } from "@/lib/ai-text-scoring";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -130,7 +131,13 @@ export async function POST(request: NextRequest) {
 
     const createdAt = new Date();
     const { id, fileName } = createResultFileName(submission.student.name, createdAt);
-    const result = scoreAssessment(submission, id, fileName, createdAt);
+    const textEvaluations = await evaluateShortTextAnswers(submission);
+    const result = scoreAssessment(
+      { ...submission, textEvaluations },
+      id,
+      fileName,
+      createdAt
+    );
 
     try {
       await storage.saveResult(fileName, result);

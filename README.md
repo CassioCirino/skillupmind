@@ -19,6 +19,7 @@ Aplicação Next.js para avaliação inicial de prontidão para TI, com área p�
 - Escalas diretas foram substituídas por dilemas bilaterais/SJT, sem indicar que "10" é melhor.
 - Cada pergunta é cronometrada e o tempo gasto entra na pontuação.
 - Perguntas abertas exigem evidência, ação e relação com o cenário; respostas sem sentido ou genéricas recebem nota baixa e não ganham bônus de tempo.
+- Opcionalmente, perguntas abertas podem ser avaliadas por uma API OpenAI-compatible, como NVIDIA NIM, mantendo a rubrica local como trava de segurança.
 - Cada email pode ter apenas uma avaliação ativa.
 - O admin pode arquivar/desarquivar/apagar avaliações; avaliações arquivadas liberam o email para refazer.
 - O aluno vê apenas a confirmação de envio.
@@ -57,6 +58,10 @@ ADMIN_PASSWORD=admin
 ADMIN_SESSION_TOKEN=troque-este-token
 BLOB_READ_WRITE_TOKEN=token-do-vercel-blob
 BLOB_STORE_ID=id-do-vercel-blob
+AI_TEXT_SCORING_ENABLED=false
+AI_TEXT_SCORING_BASE_URL=https://integrate.api.nvidia.com/v1
+AI_TEXT_SCORING_API_KEY=
+AI_TEXT_SCORING_MODEL=
 ```
 
 ## Storage
@@ -85,6 +90,21 @@ SKILLUPMIND_BLOB_STORE_ID=
 
 Quando os dois formatos existem, o app prefere `SKILLUPMIND_BLOB_*`.
 
+## Avaliação de Texto com IA
+
+Por padrão, o app usa uma rubrica local para perguntas abertas. Para ativar uma camada opcional de IA, configure uma API OpenAI-compatible:
+
+```env
+AI_TEXT_SCORING_ENABLED=true
+AI_TEXT_SCORING_BASE_URL=https://integrate.api.nvidia.com/v1
+AI_TEXT_SCORING_API_KEY=nvapi-...
+AI_TEXT_SCORING_MODEL=nome-do-modelo
+```
+
+Também é aceito `NVIDIA_API_KEY` no lugar de `AI_TEXT_SCORING_API_KEY`.
+
+A rubrica local continua sendo aplicada antes da IA. Respostas sem sentido, risadas, frases muito curtas ou sem sinais mínimos de conteúdo são bloqueadas localmente e não recebem bônus por velocidade.
+
 Os arquivos locais em `data/results/*.json` são ignorados pelo Git para evitar publicação acidental de dados de alunos.
 
 ## Publicação na Vercel
@@ -99,6 +119,10 @@ ADMIN_PASSWORD=troque-a-senha
 ADMIN_SESSION_TOKEN=valor-longo-e-aleatorio
 BLOB_READ_WRITE_TOKEN=token-do-vercel-blob
 BLOB_STORE_ID=id-do-vercel-blob
+AI_TEXT_SCORING_ENABLED=false
+AI_TEXT_SCORING_BASE_URL=https://integrate.api.nvidia.com/v1
+AI_TEXT_SCORING_API_KEY=
+AI_TEXT_SCORING_MODEL=
 ```
 
 4. Crie/conecte um Vercel Blob Store ao projeto. Se a Vercel criar variáveis com prefixo customizado, como `SKILLUPMIND_BLOB_READ_WRITE_TOKEN` e `SKILLUPMIND_BLOB_STORE_ID`, não é necessário renomear.

@@ -84,10 +84,20 @@ export type QuestionTiming = {
   timedOut: boolean;
 };
 
+export type TextEvaluationSource = "deterministic" | "ai";
+
+export type TextEvaluation = {
+  score: number;
+  source: TextEvaluationSource;
+  reason?: string;
+  model?: string;
+};
+
 export type AssessmentSubmission = {
   student: StudentInfo;
   answers: Record<string, AnswerValue>;
   timings?: Record<string, QuestionTiming>;
+  textEvaluations?: Record<string, TextEvaluation>;
 };
 
 export type ScoredAnswer = {
@@ -103,6 +113,9 @@ export type ScoredAnswer = {
   rawScore: number;
   weight: number;
   weightedScore: number;
+  evaluationSource?: TextEvaluationSource;
+  evaluationReason?: string;
+  evaluationModel?: string;
 };
 
 export type SkillScore = {
@@ -111,7 +124,7 @@ export type SkillScore = {
   level: Level;
 };
 
-export type AssessmentVersion = "legacy" | "v3" | "v4" | "v6" | "v8";
+export type AssessmentVersion = "legacy" | "v3" | "v4" | "v6" | "v8" | "v9";
 export type AssessmentStatus = "active" | "archived";
 
 export type AssessmentResult = {

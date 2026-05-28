@@ -203,6 +203,12 @@ export function StudentReport({
                   <p className="mt-2 text-xs text-muted-foreground">
                     Nota calculada {formatScore(answer.rawScore)} · Peso {answer.weight} · Ponderada{" "}
                     {formatScore(answer.weightedScore)}
+                    {answer.evaluationSource && (
+                      <>
+                        {" "}· Avaliação {answer.evaluationSource === "ai" ? "IA" : "local"}
+                        {answer.evaluationModel ? ` (${answer.evaluationModel})` : ""}
+                      </>
+                    )}
                     {typeof answer.timeSpentSeconds === "number" && (
                       <>
                         {" "}· Tempo {answer.timeSpentSeconds}s/{answer.timeLimitSeconds}s · Tempo-score{" "}
@@ -210,6 +216,11 @@ export function StudentReport({
                       </>
                     )}
                   </p>
+                  {answer.evaluationReason && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Critério: {answer.evaluationReason}
+                    </p>
+                  )}
                 </div>
               );
             })}
