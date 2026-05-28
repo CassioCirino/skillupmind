@@ -75,51 +75,132 @@ export function scoreShortText(answer: AnswerValue) {
   if (typeof answer !== "string") return 0;
 
   const text = answer.trim().toLowerCase();
-  if (text.length < 8) return 2;
+  const normalized = text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  const compact = normalized.replace(/[^a-z0-9]/g, "");
+  const words = normalized.match(/[a-z0-9]+/g) ?? [];
+  const distinctWords = new Set(words.filter((word) => word.length > 2));
 
-  const keywords = [
+  if (
+    compact.length < 12 ||
+    words.length < 3 ||
+    distinctWords.size < 2 ||
+    /^(ha|ah|rs|kk)+$/i.test(compact) ||
+    /(.)\1{5,}/.test(compact)
+  ) {
+    return 0;
+  }
+
+  const countMatches = (terms: string[]) =>
+    terms.filter((term) => normalized.includes(term)).length;
+
+  const evidenceMatches = countMatches([
     "erro",
-    "evidência",
-    "evidencias",
-    "impacto",
-    "horário",
-    "horario",
+    "5xx",
+    "422",
+    "courseid",
+    "csv",
+    "api",
+    "log",
+    "logs",
     "console",
     "network",
     "rede",
-    "api",
-    "requisição",
     "requisicao",
     "dados",
-    "log",
-    "logs",
-    "debug",
-    "testar",
-    "teste",
-    "hipótese",
-    "hipotese",
+    "matricula",
+    "matriculas",
+    "tela",
+    "branco",
+    "usuario",
+    "usuarios",
+    "10:42",
+    "10:45",
+    "campo"
+  ]);
+  const actionMatches = countMatches([
+    "verificar",
+    "verificaria",
+    "checar",
+    "checaria",
+    "investigar",
+    "investigaria",
     "inspecionar",
+    "analisar",
+    "comparar",
+    "compararia",
+    "testar",
+    "testaria",
+    "validar",
+    "validado",
+    "confirmar",
+    "reproduzir",
+    "reverter",
+    "corrigir",
+    "acionar",
+    "pedir"
+  ]);
+  const impactMatches = countMatches([
+    "impacto",
+    "impacta",
     "bloqueio",
-    "próximo",
+    "bloqueada",
+    "bloqueado",
+    "impede",
     "proximo",
     "passo",
-    "contexto"
-  ];
+    "apoio",
+    "necessario",
+    "preciso",
+    "status",
+    "contexto",
+    "tentativa",
+    "prazo",
+    "contrato",
+    "48"
+  ]);
+  const structureMatches = countMatches([
+    "primeiro",
+    "depois",
+    "em seguida",
+    "antes",
+    "apos",
+    "1.",
+    "2.",
+    "status:"
+  ]);
+  const totalSignals = evidenceMatches + actionMatches + impactMatches;
+  const blameWithoutEvidence =
+    /(aluno|usuario|usuário).*(nao sabe|não sabe|culpa|errou|errado)/i.test(text) &&
+    totalSignals === 0;
 
-  const matches = new Set(
-    keywords.filter((keyword) => text.includes(keyword))
-  );
+  if (blameWithoutEvidence || totalSignals === 0) {
+    return 1;
+  }
 
-  const hasStepByStep =
-    /(primeiro|depois|em seguida|passo|1\.|2\.|verificaria|checaria)/i.test(text) &&
-    text.length >= 80;
+  let score =
+    1 +
+    Math.min(evidenceMatches, 4) * 1.2 +
+    Math.min(actionMatches, 3) * 1.4 +
+    Math.min(impactMatches, 2) * 1.1 +
+    Math.min(structureMatches, 2) * 0.8;
 
-  if (matches.size >= 3 && hasStepByStep) return 10;
-  if (matches.size >= 3) return 9;
-  if (matches.size === 2) return 7;
-  if (matches.size === 1) return 5;
+  if (text.length >= 80) {
+    score += 0.8;
+  }
 
-  return 3;
+  if (evidenceMatches > 0 && actionMatches > 0 && impactMatches > 0) {
+    score += 1;
+  }
+
+  if (words.length < 5) {
+    score = Math.min(score, 2);
+  } else if (words.length < 8 && totalSignals < 3) {
+    score = Math.min(score, 3);
+  }
+
+  return clampScore(roundOne(score));
 }
 
 export function scoreQuestion(question: Question, answer: AnswerValue): number {
@@ -201,9 +282,11 @@ export function scoreAssessment(
     const answer = submission.answers[question.id] ?? "";
     const contentScore = roundOne(scoreQuestion(question, answer));
     const timingScore = scoreTime(submission.timings?.[question.id], question, answer);
+    const appliedTimeScore =
+      question.type === "short_text" && contentScore < 4 ? 0 : timingScore.timeScore;
     const rawScore = isTimedOutAnswer(answer)
       ? 0
-      : roundOne(contentScore * 0.85 + timingScore.timeScore * 0.15);
+      : roundOne(contentScore * 0.85 + appliedTimeScore * 0.15);
 
     return {
       questionId: question.id,
@@ -211,7 +294,7 @@ export function scoreAssessment(
       type: question.type,
       answer,
       contentScore,
-      timeScore: timingScore.timeScore,
+      timeScore: appliedTimeScore,
       timeSpentSeconds: timingScore.timeSpentSeconds,
       timeLimitSeconds: timingScore.timeLimitSeconds,
       timedOut: timingScore.timedOut,
@@ -257,7 +340,7 @@ export function scoreAssessment(
   const recommendedTracks = buildRecommendedTracks(skillNumericScores, overallScore);
 
   const resultWithoutReport: Omit<AssessmentResult, "report"> = {
-    assessmentVersion: "v6",
+    assessmentVersion: "v8",
     status: "active",
     id,
     fileName,

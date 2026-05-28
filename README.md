@@ -18,6 +18,7 @@ Aplicação Next.js para avaliação inicial de prontidão para TI, com área p�
 - Alternativas embaralhadas por tentativa, com correção por `value`.
 - Escalas diretas foram substituídas por dilemas bilaterais/SJT, sem indicar que "10" é melhor.
 - Cada pergunta é cronometrada e o tempo gasto entra na pontuação.
+- Perguntas abertas exigem evidência, ação e relação com o cenário; respostas sem sentido ou genéricas recebem nota baixa e não ganham bônus de tempo.
 - Cada email pode ter apenas uma avaliação ativa.
 - O admin pode arquivar/desarquivar/apagar avaliações; avaliações arquivadas liberam o email para refazer.
 - O aluno vê apenas a confirmação de envio.

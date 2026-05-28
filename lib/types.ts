@@ -111,7 +111,7 @@ export type SkillScore = {
   level: Level;
 };
 
-export type AssessmentVersion = "legacy" | "v3" | "v4" | "v6";
+export type AssessmentVersion = "legacy" | "v3" | "v4" | "v6" | "v8";
 export type AssessmentStatus = "active" | "archived";
 
 export type AssessmentResult = {

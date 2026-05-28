@@ -1,7 +1,8 @@
 import { buildAutomaticReport, buildRecommendedTracks } from "@/lib/report";
-import { getLevel } from "@/lib/scoring";
+import { getLevel, scoreAssessment } from "@/lib/scoring";
 import {
   AssessmentResult,
+  AssessmentSubmission,
   SkillKey,
   SkillScore,
   StudentInfo,
@@ -74,9 +75,60 @@ function extremes(skills: AssessmentResult["skills"]) {
   };
 }
 
+function shouldRescoreCurrentAssessment(raw: AssessmentResult) {
+  return (
+    (raw.assessmentVersion === "v6" || raw.assessmentVersion === "v8") &&
+    Array.isArray(raw.answers) &&
+    raw.answers.length > 0
+  );
+}
+
+function rescoreCurrentAssessment(raw: AssessmentResult): AssessmentResult {
+  const student = normalizeStudent(raw.student as RawStudent);
+  const answers = raw.answers.reduce<AssessmentSubmission["answers"]>((acc, answer) => {
+    acc[answer.questionId] = answer.answer;
+    return acc;
+  }, {});
+  const timings = raw.answers.reduce<NonNullable<AssessmentSubmission["timings"]>>(
+    (acc, answer) => {
+      if (
+        typeof answer.timeSpentSeconds === "number" &&
+        typeof answer.timeLimitSeconds === "number" &&
+        typeof answer.timedOut === "boolean"
+      ) {
+        acc[answer.questionId] = {
+          timeSpentSeconds: answer.timeSpentSeconds,
+          timeLimitSeconds: answer.timeLimitSeconds,
+          timedOut: answer.timedOut
+        };
+      }
+      return acc;
+    },
+    {}
+  );
+  const rescored = scoreAssessment(
+    { student, answers, timings },
+    raw.id,
+    raw.fileName,
+    new Date(raw.createdAt)
+  );
+
+  return {
+    ...rescored,
+    createdAt: raw.createdAt,
+    status: raw.status ?? "active",
+    archivedAt: raw.archivedAt,
+    archivedBy: raw.archivedBy
+  };
+}
+
 export function normalizeAssessmentResult(raw: AssessmentResult): AssessmentResult {
   const result = raw as AnyResult;
   const hasV3Skills = skillsOrder.every((skill) => result.skills[skill]);
+
+  if (shouldRescoreCurrentAssessment(raw)) {
+    return rescoreCurrentAssessment(raw);
+  }
 
   if (hasV3Skills) {
     return {
