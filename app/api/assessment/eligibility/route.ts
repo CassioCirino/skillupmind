@@ -14,7 +14,22 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const results = await getStorageProvider().listResults();
+  let results;
+
+  try {
+    results = await getStorageProvider().listResults();
+  } catch (error) {
+    console.error("Failed to verify assessment eligibility.", error);
+    return NextResponse.json(
+      {
+        allowed: false,
+        message:
+          "A avaliação está temporariamente indisponível porque o storage de resultados não está configurado. Avise o administrador."
+      },
+      { status: 503 }
+    );
+  }
+
   const hasActiveAssessment = results.some(
     (result) =>
       result.status !== "archived" &&

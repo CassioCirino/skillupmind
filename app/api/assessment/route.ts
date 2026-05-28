@@ -86,7 +86,21 @@ export async function POST(request: NextRequest) {
         email: normalizedEmail
       }
     };
-    const existingResults = await storage.listResults();
+    let existingResults;
+
+    try {
+      existingResults = await storage.listResults();
+    } catch (error) {
+      console.error("Failed to verify duplicate assessment.", error);
+      return NextResponse.json(
+        {
+          message:
+            "A avaliação está temporariamente indisponível porque o storage de resultados não está configurado. Avise o administrador."
+        },
+        { status: 503 }
+      );
+    }
+
     const alreadySubmitted = existingResults.some(
       (result) =>
         result.status !== "archived" &&
@@ -117,7 +131,19 @@ export async function POST(request: NextRequest) {
     const createdAt = new Date();
     const { id, fileName } = createResultFileName(submission.student.name, createdAt);
     const result = scoreAssessment(submission, id, fileName, createdAt);
-    await storage.saveResult(fileName, result);
+
+    try {
+      await storage.saveResult(fileName, result);
+    } catch (error) {
+      console.error("Failed to save assessment result.", error);
+      return NextResponse.json(
+        {
+          message:
+            "Não foi possível salvar a avaliação porque o storage de resultados não está configurado. Avise o administrador."
+        },
+        { status: 503 }
+      );
+    }
 
     return NextResponse.json(
       { ok: true, message: "Avaliação registrada com sucesso." },
