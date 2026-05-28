@@ -11,11 +11,22 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: "Não autorizado." }, { status: 401 });
   }
 
-  const results = await getStorageProvider().listResults();
-  const activeResults = results.filter((result) => result.status !== "archived");
+  try {
+    const results = await getStorageProvider().listResults();
+    const activeResults = results.filter((result) => result.status !== "archived");
 
-  return NextResponse.json({
-    results,
-    ranking: buildRanking(activeResults)
-  });
+    return NextResponse.json({
+      results,
+      ranking: buildRanking(activeResults)
+    });
+  } catch (error) {
+    console.error("Failed to list assessment results.", error);
+    return NextResponse.json(
+      {
+        message:
+          "Não foi possível carregar os resultados. Verifique a configuração do Vercel Blob."
+      },
+      { status: 503 }
+    );
+  }
 }

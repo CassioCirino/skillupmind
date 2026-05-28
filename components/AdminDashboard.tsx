@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Archive, Award, BarChart3, Building2, GraduationCap, LogOut, Users } from "lucide-react";
+import { AlertTriangle, Archive, Award, BarChart3, Building2, GraduationCap, LogOut, Users } from "lucide-react";
 import { buildRanking } from "@/lib/scoring";
 import { AssessmentResult, College, skillLabels, skillsOrder } from "@/lib/types";
 import { formatScore } from "@/lib/utils";
@@ -61,7 +61,13 @@ function buildSkillAverages(results: AssessmentResult[]) {
   }));
 }
 
-export function AdminDashboard({ results }: { results: AssessmentResult[] }) {
+export function AdminDashboard({
+  results,
+  storageWarning
+}: {
+  results: AssessmentResult[];
+  storageWarning?: string;
+}) {
   const router = useRouter();
   const [items, setItems] = useState(results);
   const [search, setSearch] = useState("");
@@ -132,6 +138,18 @@ export function AdminDashboard({ results }: { results: AssessmentResult[] }) {
             Sair
           </Button>
         </header>
+
+        {storageWarning && (
+          <Card className="border-orange-200 bg-orange-50">
+            <CardContent className="flex gap-3 p-4 text-sm leading-6 text-orange-900">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+              <div>
+                <p className="font-semibold">Storage de resultados indisponível</p>
+                <p>{storageWarning}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
           <StatCard icon={Users} label="Testes ativos" value={String(activeResults.length)} />
