@@ -55,6 +55,7 @@ ADMIN_USER=admin
 ADMIN_PASSWORD=admin
 ADMIN_SESSION_TOKEN=troque-este-token
 BLOB_READ_WRITE_TOKEN=token-do-vercel-blob
+BLOB_STORE_ID=id-do-vercel-blob
 ```
 
 ## Storage
@@ -65,7 +66,23 @@ Em desenvolvimento, cada avaliação é salva como um JSON individual em:
 data/results
 ```
 
-Em produção, se `NODE_ENV=production` e `BLOB_READ_WRITE_TOKEN` estiver definido, o app usa `VercelBlobStorageProvider`.
+Em produção, se `NODE_ENV=production` e uma configuração de Vercel Blob estiver definida, o app usa `VercelBlobStorageProvider`.
+
+O app aceita tanto as variáveis padrão:
+
+```env
+BLOB_READ_WRITE_TOKEN=
+BLOB_STORE_ID=
+```
+
+quanto as variáveis criadas com prefixo customizado na Vercel:
+
+```env
+SKILLUPMIND_BLOB_READ_WRITE_TOKEN=
+SKILLUPMIND_BLOB_STORE_ID=
+```
+
+Quando os dois formatos existem, o app prefere `SKILLUPMIND_BLOB_*`.
 
 Os arquivos locais em `data/results/*.json` são ignorados pelo Git para evitar publicação acidental de dados de alunos.
 
@@ -80,9 +97,10 @@ ADMIN_USER=admin
 ADMIN_PASSWORD=troque-a-senha
 ADMIN_SESSION_TOKEN=valor-longo-e-aleatorio
 BLOB_READ_WRITE_TOKEN=token-do-vercel-blob
+BLOB_STORE_ID=id-do-vercel-blob
 ```
 
-4. Crie/conecte um Vercel Blob Store ao projeto e use o token em `BLOB_READ_WRITE_TOKEN`.
+4. Crie/conecte um Vercel Blob Store ao projeto. Se a Vercel criar variáveis com prefixo customizado, como `SKILLUPMIND_BLOB_READ_WRITE_TOKEN` e `SKILLUPMIND_BLOB_STORE_ID`, não é necessário renomear.
 5. Faça o deploy.
 
 ## Verificação

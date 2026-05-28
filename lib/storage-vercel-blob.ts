@@ -5,8 +5,37 @@ import { AssessmentResult } from "@/lib/types";
 
 const prefix = "results/";
 
+function getBlobConfig() {
+  return {
+    token:
+      process.env.SKILLUPMIND_BLOB_READ_WRITE_TOKEN ??
+      process.env.BLOB_READ_WRITE_TOKEN,
+    storeId:
+      process.env.SKILLUPMIND_BLOB_STORE_ID ??
+      process.env.BLOB_STORE_ID
+  };
+}
+
+function getBlobCommandOptions() {
+  const { token, storeId } = getBlobConfig();
+
+  return {
+    ...(token ? { token } : {}),
+    ...(storeId ? { storeId } : {})
+  };
+}
+
+export function hasVercelBlobConfig() {
+  const { token, storeId } = getBlobConfig();
+  return Boolean(token || storeId);
+}
+
 async function readPrivateJson(pathname: string) {
-  const response = await get(pathname, { access: "private", useCache: false });
+  const response = await get(pathname, {
+    access: "private",
+    useCache: false,
+    ...getBlobCommandOptions()
+  });
 
   if (!response || response.statusCode !== 200) {
     return null;
@@ -21,12 +50,13 @@ export class VercelBlobStorageProvider implements StorageProvider {
     await put(`${prefix}${fileName}`, JSON.stringify(data, null, 2), {
       access: "private",
       contentType: "application/json",
-      addRandomSuffix: false
+      addRandomSuffix: false,
+      ...getBlobCommandOptions()
     });
   }
 
   async listResults(): Promise<AssessmentResult[]> {
-    const response = await list({ prefix });
+    const response = await list({ prefix, ...getBlobCommandOptions() });
     const jsonBlobs = response.blobs.filter((blob) => blob.pathname.endsWith(".json"));
     const results = await Promise.all(
       jsonBlobs.map((blob) => readPrivateJson(blob.pathname))
@@ -73,7 +103,7 @@ export class VercelBlobStorageProvider implements StorageProvider {
       return false;
     }
 
-    await del(`${prefix}${result.fileName}`);
+    await del(`${prefix}${result.fileName}`, getBlobCommandOptions());
     return true;
   }
 }

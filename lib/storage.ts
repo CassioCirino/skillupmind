@@ -1,6 +1,6 @@
 import { AssessmentResult } from "@/lib/types";
 import { LocalFileStorageProvider } from "@/lib/storage-local";
-import { VercelBlobStorageProvider } from "@/lib/storage-vercel-blob";
+import { hasVercelBlobConfig, VercelBlobStorageProvider } from "@/lib/storage-vercel-blob";
 
 export interface StorageProvider {
   saveResult(fileName: string, data: AssessmentResult): Promise<void>;
@@ -11,7 +11,7 @@ export interface StorageProvider {
 }
 
 export function getStorageProvider(): StorageProvider {
-  if (process.env.NODE_ENV === "production" && process.env.BLOB_READ_WRITE_TOKEN) {
+  if (process.env.NODE_ENV === "production" && hasVercelBlobConfig()) {
     return new VercelBlobStorageProvider();
   }
 
