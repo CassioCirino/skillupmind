@@ -56,3 +56,68 @@
     @apply text-sm leading-6 text-muted-foreground;
   }
 }
+
+@media print {
+  @page {
+    margin: 12mm;
+    size: A4;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  body {
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-hide,
+  .screen-only {
+    display: none !important;
+  }
+
+  .page-shell {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .print-report {
+    display: block !important;
+  }
+
+  .print-report [class*="shadow"] {
+    box-shadow: none !important;
+  }
+
+  .print-report .rounded-lg,
+  .print-report .rounded-md {
+    border-radius: 6px !important;
+  }
+
+  .print-report .bg-white,
+  .print-report .bg-white\/90,
+  .print-report .bg-white\/95 {
+    background: #ffffff !important;
+  }
+
+  .print-report [class*="grid"] {
+    break-inside: avoid;
+  }
+
+  .print-report [class*="border"] {
+    border-color: #dbe3ee !important;
+  }
+
+  .print-report > div > * {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-report svg,
+  .print-report canvas {
+    max-width: 100% !important;
+  }
+}

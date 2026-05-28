@@ -177,7 +177,7 @@ export function StudentReport({
       </Card>
 
       {showAnswers && (
-        <Card>
+        <Card className="screen-only">
           <CardHeader>
             <CardTitle>Respostas dadas</CardTitle>
             <CardDescription>Resposta, nota calculada, peso e pontuação ponderada por pergunta.</CardDescription>
